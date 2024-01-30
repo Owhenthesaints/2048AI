@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton
-import sys
+from PyQt6.QtWidgets import QWidget, QGridLayout, QPushButton
 
 
 class Window2048(QWidget):
@@ -14,4 +13,7 @@ class Window2048(QWidget):
             for col in range(4):
                 button = QPushButton("0")
                 button.setFixedSize(75, 75)
+                button.setStyleSheet("background-color: white; color: black")
                 grid.addWidget(button, row, col)
+
+        self.setLayout(grid)

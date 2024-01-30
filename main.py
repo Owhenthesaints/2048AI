@@ -1,10 +1,11 @@
-import sys
-from Window2048 import Window2048
-from PyQt6.QtWidgets import QApplication
+from Game2048 import Game2048
 
-app = QApplication(sys.argv)
-window = Window2048()
+game = Game2048()
 
-window.show()
+game.add_random_square()
 
-app.exec()
+print(game)
+
+game.move_left()
+
+print(game)
