@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from enum import Enum
+import time
 
 
 class Direction(Enum):
@@ -44,9 +45,9 @@ class Game2048(object):
             self.add_random_square()
 
     def move_down(self):
-        board = self.__board_update(self._board.T[::-1])
-        if not np.array_equal(self._board, board[::-1].T):
-            self._board = board[::-1].T
+        board = self.__board_update(self._board.T[::, ::-1])[::, ::-1].T
+        if not np.array_equal(self._board, board):
+            self._board = board
             self.add_random_square()
 
     def move_left(self):
@@ -65,19 +66,24 @@ class Game2048(object):
     def __board_update(board: np.ndarray) -> np.ndarray:
         board = board.copy()
         for row in board:
-            next_free_spot = 0
             if np.all(row == 0):
                 continue
+            next_free_spot = 0
+            merged_limit = 0
             for index in range(len(row)):
                 if row[index] != 0:
                     # check whether to merge or move elements sequentially
-                    if next_free_spot != 0 and row[next_free_spot - 1] == row[index]:
-                        row[next_free_spot - 1] *= 2
+                    if (next_free_spot != 0 and merged_limit <= next_free_spot - 1 and
+                            row[next_free_spot - 1] == row[index]):
+                        row[next_free_spot - 1] <<= 1
                         row[index] = 0
+                        merged_limit += 1
                     elif next_free_spot != index:
                         row[next_free_spot] = row[index]
                         row[index] = 0
-                    next_free_spot += 1
+                        next_free_spot += 1
+                    else:
+                        next_free_spot += 1
         return board
 
     def __str__(self):

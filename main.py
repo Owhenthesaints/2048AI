@@ -4,6 +4,11 @@ from pynput import keyboard
 
 game = Game2048()
 
+game.set_board(np.array([[0, 0, 0, 0],
+                         [0, 0, 0, 0],
+                         [0, 0, 0, 0],
+                         [4, 4, 8, 2]]))
+
 
 def on_press(key):
     if key == keyboard.Key.up:
