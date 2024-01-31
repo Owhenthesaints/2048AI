@@ -1,11 +1,27 @@
 import numpy as np
 import random
+from enum import Enum
+
+
+class Direction(Enum):
+    UP = 1
+    DOWN = 2
+    LEFT = 3
+    RIGHT = 4
 
 
 class Game2048(object):
 
     def __init__(self):
-        self._board = np.zeros((4, 4), dtype=int)
+        self._board: np.ndarray = np.zeros((4, 4), dtype=int)
+        self._lost: bool = True
+        self.add_random_square()
+
+    def set_board(self, board: np.ndarray):
+        self._board = board.copy()
+
+    def has_lost(self):
+        return self._lost
 
     def add_random_square(self) -> bool:
         num_zeros: int = np.count_nonzero(self._board == 0)
@@ -22,23 +38,32 @@ class Game2048(object):
         return self._board.copy()
 
     def move_up(self):
-        self.__board_update(self._board.T)
-        self.add_random_square()
+        board = self.__board_update(self._board.T)
+        if not np.array_equal(self._board, board.T):
+            self._board = board.T
+            self.add_random_square()
 
     def move_down(self):
-        self.__board_update(self._board.T[::-1])
-        self.add_random_square()
+        board = self.__board_update(self._board.T[::-1])
+        if not np.array_equal(self._board, board[::-1].T):
+            self._board = board[::-1].T
+            self.add_random_square()
 
     def move_left(self):
-        self.__board_update(self._board)
-        self.add_random_square()
+        board = self.__board_update(self._board.copy())
+        if not np.array_equal(board, self._board):
+            self._board = board
+            self.add_random_square()
 
     def move_right(self):
-        self.__board_update(self._board[::-1])
-        self.add_random_square()
+        board = self.__board_update(self._board[::, ::-1])[::, ::-1]
+        if not np.array_equal(board, self._board):
+            self._board = board
+            self.add_random_square()
 
     @staticmethod
-    def __board_update(board: np.ndarray):
+    def __board_update(board: np.ndarray) -> np.ndarray:
+        board = board.copy()
         for row in board:
             next_free_spot = 0
             if np.all(row == 0):
@@ -49,10 +74,11 @@ class Game2048(object):
                     if next_free_spot != 0 and row[next_free_spot - 1] == row[index]:
                         row[next_free_spot - 1] *= 2
                         row[index] = 0
-                    else:
+                    elif next_free_spot != index:
                         row[next_free_spot] = row[index]
                         row[index] = 0
-                        next_free_spot += 1
+                    next_free_spot += 1
+        return board
 
     def __str__(self):
         return np.array_str(self._board)
