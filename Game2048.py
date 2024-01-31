@@ -11,10 +11,10 @@ class Direction(Enum):
     RIGHT = 4
 
 
-class Game2048(object):
+class Game2048:
 
-    def __init__(self):
-        self._board: np.ndarray = np.zeros((4, 4), dtype=int)
+    def __init__(self, size: tuple = (4, 4)):
+        self._board: np.ndarray = np.zeros(size, dtype=int)
         self._lost: bool = True
         self.add_random_square()
 
