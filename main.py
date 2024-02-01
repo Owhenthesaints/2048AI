@@ -1,7 +1,4 @@
-import sys
-
 import numpy as np
-from pynput import keyboard
 from Windowed2048 import Windowed2048
 from PyQt6.QtWidgets import QApplication
 import sys
