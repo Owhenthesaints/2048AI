@@ -6,7 +6,8 @@ import numpy as np
 from typing import Union
 
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
-DEFAULT_SIZE = (4, 4)
+DEFAULT_DIV = (4, 4)
+
 
 
 class BoxNumber2048(QGraphicsItem):
@@ -22,7 +23,7 @@ class BoxNumber2048(QGraphicsItem):
         super().__init__(parent)
         self.__position = [x, y]
         self._square_background = QGraphicsRectItem(x, y, size[0], size[1], self)
-        self._square_background.setBrush(QColor(0, 0, 0))
+        self._square_background.setBrush(QColor("yellow"))
         self._text_item = QGraphicsTextItem(str(number), self._square_background)
         self._text_item.setDefaultTextColor(QColor(0, 0, 0))
 
@@ -35,12 +36,12 @@ class BoxNumber2048(QGraphicsItem):
 
 
 class Overlay2048(QGraphicsView):
-    def __init__(self, window_size: tuple = DEFAULT_SIZE, parent=None):
+    def __init__(self, num_div: tuple = DEFAULT_DIV, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self._SIZE = window_size
+        self._SIZE = num_div
         self.__background_squares: list[BoxNumber2048] = [BoxNumber2048(2, 0, 0, (50, 50))]
         for background_box in self.__background_squares:
             self.scene.addItem(background_box)
@@ -68,13 +69,13 @@ class Overlay2048(QGraphicsView):
 
 
 class Window2048(QMainWindow):
-    def __init__(self, size: tuple = DEFAULT_SIZE, window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
+    def __init__(self, num_divs: tuple = DEFAULT_DIV, window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
         """
         A class to instantiate a Window which can host a 2048 game.
         :param window_size: x, y and initial width and height of the window
         :type window_size: tuple
-        :param size: n then m representing size of playable area
-        :type size: tuple
+        :param num_divs: n then m representing size of playable area
+        :type num_divs: tuple
         :rtype: None
         """
         super().__init__()
@@ -89,7 +90,7 @@ class Window2048(QMainWindow):
         self.central_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # intialize background widget and 2048 overlay
-        self._view2048 = Overlay2048(size, self.central_widget)
+        self._view2048 = Overlay2048(num_divs, self.central_widget)
         self._view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._view2048.setStyleSheet("background-color: transparent")
 
