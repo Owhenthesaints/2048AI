@@ -1,15 +1,16 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsRectItem, \
     QGraphicsTextItem, QGraphicsItem, QSizePolicy, QStackedLayout, QHBoxLayout
 from PyQt6.QtGui import QPainter, QColor
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QRectF
 import numpy as np
+from typing import Union
 
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
 DEFAULT_SIZE = (4, 4)
 
 
 class BoxNumber2048(QGraphicsItem):
-    def __init__(self, number: int, x, y, size: tuple, parent=None):
+    def __init__(self, number: int, x: int, y: int, size: tuple = (50, 50), parent=None):
         """
         A Box with a number and a Background Color
         :param number: Number inside the box
@@ -19,19 +20,34 @@ class BoxNumber2048(QGraphicsItem):
         :param parent: define parent for memory management
         """
         super().__init__(parent)
-        self._square_background = QGraphicsRectItem(0, 0, size[0], size[1], self)
+        self.__position = [x, y]
+        self._square_background = QGraphicsRectItem(x, y, size[0], size[1], self)
         self._square_background.setBrush(QColor(0, 0, 0))
-        self._text_item = QGraphicsTextItem(str(number), self)
-        self._text_item.setDefaultTextColor(QColor("white"))
+        self._text_item = QGraphicsTextItem(str(number), self._square_background)
+        self._text_item.setDefaultTextColor(QColor(0, 0, 0))
+
+    def boundingRect(self):
+        return self._square_background.boundingRect()
+
+    def paint(self, painter: QPainter, option, widget=None):
+        self._square_background.paint(painter, option, widget)
+        self._text_item.paint(painter, option, widget)
 
 
 class Overlay2048(QGraphicsView):
-    def __init__(self, board: np.ndarray = None, window_size: tuple = DEFAULT_SIZE, parent=None):
+    def __init__(self, window_size: tuple = DEFAULT_SIZE, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self._SIZE = window_size
+        self.__background_squares: list[BoxNumber2048] = [BoxNumber2048(2, 0, 0, (50, 50))]
+        for background_box in self.__background_squares:
+            self.scene.addItem(background_box)
+
+    def draw_board(self, board: Union[np.ndarray, list[list]]):
+        if board.shape != self._SIZE:
+            raise ValueError("The board does not have have the right size")
 
     def drawBackground(self, painter, rect):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -73,10 +89,10 @@ class Window2048(QMainWindow):
         self.central_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # intialize background widget and 2048 overlay
-        self.view2048 = Overlay2048(np.zeros((4, 4)), size, self.central_widget)
-        self.view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.view2048.setStyleSheet("background-color: transparent")
+        self._view2048 = Overlay2048(size, self.central_widget)
+        self._view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._view2048.setStyleSheet("background-color: transparent")
 
         # intialize layout
         self.layout = QStackedLayout(self.central_widget)
-        self.layout.addWidget(self.view2048)
+        self.layout.addWidget(self._view2048)
