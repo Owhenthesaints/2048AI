@@ -7,7 +7,26 @@ from typing import Union
 
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
 DEFAULT_DIV = (4, 4)
-
+COLOR_DICT = {
+    0: QColor(0, 0, 0, 0),
+    2: QColor(238, 228, 218, 255),
+    4: QColor(236, 224, 202, 255),
+    8: QColor(244, 177, 125),
+    16: QColor(245, 149, 101, 255),
+    32: QColor(245, 124, 95, 255),
+    64: QColor(246, 93, 59, 255),
+    128: QColor(239, 205, 115, 255),
+    256: QColor(237,204,99,255),
+    512: QColor(237, 198, 81),
+    1024: QColor(238, 199, 68),
+    2048: QColor(238, 193, 48),
+    4096: QColor(254, 61, 62),
+    8192: QColor(255, 32, 33),
+    16384: QColor(255, 32, 33),
+    32768: QColor(255, 32, 33),
+    65536: QColor(255, 32, 33),
+    131072: QColor(255, 32, 33)
+}
 
 
 class BoxNumber2048(QGraphicsItem):
@@ -30,6 +49,10 @@ class BoxNumber2048(QGraphicsItem):
     def boundingRect(self):
         return self._square_background.boundingRect()
 
+    def resize_event(self, position: list, size: tuple):
+        self.__position = position
+        self._square_background.setRect(self.__position[0], self.__position[1], size[0], size[1])
+
     def paint(self, painter: QPainter, option, widget=None):
         self._square_background.paint(painter, option, widget)
         self._text_item.paint(painter, option, widget)
@@ -41,31 +64,35 @@ class Overlay2048(QGraphicsView):
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self._SIZE = num_div
-        self.__background_squares: list[BoxNumber2048] = [BoxNumber2048(2, 0, 0, (50, 50))]
+        self._DIVS = num_div
+        self.__background_squares: list[BoxNumber2048] = [
+            BoxNumber2048(2, 0, 0, (self.width() // self._DIVS[0], self.height() // self._DIVS[0]))]
+
         for background_box in self.__background_squares:
             self.scene.addItem(background_box)
 
     def draw_board(self, board: Union[np.ndarray, list[list]]):
-        if board.shape != self._SIZE:
+        if board.shape != self._DIVS:
             raise ValueError("The board does not have have the right size")
 
     def drawBackground(self, painter, rect):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(QColor(0, 0, 0))
 
-        if self.height() <= self._SIZE[0] or self.width() <= self._SIZE[0]:
+        if self.height() <= self._DIVS[0] or self.width() <= self._DIVS[0]:
             return
 
-        for i in range(0, self.width(), self.width() // self._SIZE[0]):
+        for i in range(0, self.width(), self.width() // self._DIVS[0]):
             painter.drawLine(i, 0, i, self.height())
 
-        for j in range(0, self.height(), self.height() // self._SIZE[0]):
+        for j in range(0, self.height(), self.height() // self._DIVS[0]):
             painter.drawLine(0, j, self.width(), j)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.setSceneRect(0, 0, self.viewport().width(), self.viewport().height())
+        for background_square in self.__background_squares:
+            background_square.resize_event([0, 0], (self.width() // self._DIVS[0], self.height() // self._DIVS[1]))
 
 
 class Window2048(QMainWindow):
