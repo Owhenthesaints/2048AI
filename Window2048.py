@@ -1,35 +1,11 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsRectItem, \
-    QGraphicsTextItem, QGraphicsItem, QSizePolicy
+    QGraphicsTextItem, QGraphicsItem, QSizePolicy, QStackedLayout, QHBoxLayout
 from PyQt6.QtGui import QPainter, QColor
 from PyQt6.QtCore import Qt
 import numpy as np
 
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
-
-
-class BackgroundGrid(QWidget):
-
-    def __init__(self, size: tuple = (4, 4), parent=None):
-        super().__init__(parent)
-        print("Background initialized")
-        self._SIZE = size
-
-    def paintEvent(self, a0):
-        painter = QPainter(self)
-        painter.setPen(QColor(0, 0, 0))
-
-        if self.height() <= self._SIZE[0] or self.width() <= self._SIZE[0]:
-            return
-
-        for i in range(0, self.width(), self.width() // self._SIZE[0]):
-            painter.drawLine(i, 0, i, self.height())
-
-        for j in range(0, self.height(), self.height() // self._SIZE[0]):
-            painter.drawLine(0, j, self.width(), j)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.update()
+DEFAULT_SIZE = (4, 4)
 
 
 class BoxNumber2048(QGraphicsItem):
@@ -50,15 +26,33 @@ class BoxNumber2048(QGraphicsItem):
 
 
 class Overlay2048(QGraphicsView):
-    def __init__(self, board: np.ndarray = None, parent=None):
+    def __init__(self, board: np.ndarray = None, window_size: tuple = DEFAULT_SIZE, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
+        self._SIZE = window_size
+
+    def drawBackground(self, painter, rect):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(0, 0, 0))
+
+        if self.height() <= self._SIZE[0] or self.width() <= self._SIZE[0]:
+            return
+
+        for i in range(0, self.width(), self.width() // self._SIZE[0]):
+            painter.drawLine(i, 0, i, self.height())
+
+        for j in range(0, self.height(), self.height() // self._SIZE[0]):
+            painter.drawLine(0, j, self.width(), j)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.setSceneRect(0, 0, self.viewport().width(), self.viewport().height())
 
 
 class Window2048(QMainWindow):
-    def __init__(self, size: tuple = (4, 4), window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
+    def __init__(self, size: tuple = DEFAULT_SIZE, window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
         """
         A class to instantiate a Window which can host a 2048 game.
         :param window_size: x, y and initial width and height of the window
@@ -79,17 +73,10 @@ class Window2048(QMainWindow):
         self.central_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # intialize background widget and 2048 overlay
-        self.background_widget = BackgroundGrid(size, self.central_widget)
-        self.background_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        scene = QGraphicsScene(self.central_widget)
-        scene.setSceneRect(0, 0, 1, 1)
-        view = QGraphicsView(scene)
-        view.setStyleSheet("background-color: transparent;")
-        view.setSceneRect(0,0, 0, 0)
+        self.view2048 = Overlay2048(np.zeros((4, 4)), size, self.central_widget)
+        self.view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.view2048.setStyleSheet("background-color: transparent")
 
         # intialize layout
-        self.layout = QVBoxLayout(self.central_widget)
-        self.layout.addWidget(self.background_widget)
-        self.layout.addWidget(view)
-        self.layout.setStretch(0, 1)
-        self.layout.setStretch(1, 0)
+        self.layout = QStackedLayout(self.central_widget)
+        self.layout.addWidget(self.view2048)
