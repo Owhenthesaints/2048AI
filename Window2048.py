@@ -8,7 +8,6 @@ from typing import Union
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
 DEFAULT_DIV = (4, 4)
 COLOR_DICT = {
-    0: QColor(0, 0, 0, 0),
     2: QColor(238, 228, 218, 255),
     4: QColor(236, 224, 202, 255),
     8: QColor(244, 177, 125),
@@ -16,7 +15,7 @@ COLOR_DICT = {
     32: QColor(245, 124, 95, 255),
     64: QColor(246, 93, 59, 255),
     128: QColor(239, 205, 115, 255),
-    256: QColor(237,204,99,255),
+    256: QColor(237, 204, 99, 255),
     512: QColor(237, 198, 81),
     1024: QColor(238, 199, 68),
     2048: QColor(238, 193, 48),
@@ -40,9 +39,15 @@ class BoxNumber2048(QGraphicsItem):
         :param parent: define parent for memory management
         """
         super().__init__(parent)
+        # check number is a power of two
+        if number in COLOR_DICT:
+            color = COLOR_DICT[number]
+        else:
+            raise ValueError("Number not a power of two")
+        # memorize position
         self.__position = [x, y]
         self._square_background = QGraphicsRectItem(x, y, size[0], size[1], self)
-        self._square_background.setBrush(QColor("yellow"))
+        self._square_background.setBrush(color)
         self._text_item = QGraphicsTextItem(str(number), self._square_background)
         self._text_item.setDefaultTextColor(QColor(0, 0, 0))
 
@@ -59,21 +64,44 @@ class BoxNumber2048(QGraphicsItem):
 
 
 class Overlay2048(QGraphicsView):
-    def __init__(self, num_div: tuple = DEFAULT_DIV, parent=None):
+    def __init__(self, num_div: tuple = DEFAULT_DIV, board: np.ndarray = np.zeros((4, 4)), parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self._DIVS = num_div
-        self.__background_squares: list[BoxNumber2048] = [
-            BoxNumber2048(2, 0, 0, (self.width() // self._DIVS[0], self.height() // self._DIVS[0]))]
+        self.__viz_board = board
+        self.__background_squares: list[BoxNumber2048] = []
+        self.draw_board()
 
+    def set_board(self, board: np.ndarray):
+        if type(board) is not np.ndarray:
+            raise TypeError("the board is not an np.ndarray")
+        elif board.shape != self._DIVS:
+            raise ValueError("The board does not have the correct dimensions")
+        else:
+            self.__viz_board = board
+            self.draw_board()
+
+    def draw_board(self):
+        if np.all(self.__viz_board == 0):
+            return
+        # set the measure of the step
+        h_step = self.width() // self._DIVS[0]
+        v_step = self.height() // self._DIVS[1]
+        # get the nonzero indices
+        indices = np.column_stack(np.nonzero(self.__viz_board))
+        # clear the scene
+        self.scene.clear()
+        # update the background squares
+        self.__background_squares = []
+        for index in indices:
+            self.__background_squares.append(
+                BoxNumber2048(self.__viz_board[index[0]][index[1]], index[1] * h_step, index[0] * v_step, (h_step,
+                              v_step)))
+        # add all the background squares to the scene
         for background_box in self.__background_squares:
             self.scene.addItem(background_box)
-
-    def draw_board(self, board: Union[np.ndarray, list[list]]):
-        if board.shape != self._DIVS:
-            raise ValueError("The board does not have have the right size")
 
     def drawBackground(self, painter, rect):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -91,8 +119,7 @@ class Overlay2048(QGraphicsView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.setSceneRect(0, 0, self.viewport().width(), self.viewport().height())
-        for background_square in self.__background_squares:
-            background_square.resize_event([0, 0], (self.width() // self._DIVS[0], self.height() // self._DIVS[1]))
+        self.draw_board()
 
 
 class Window2048(QMainWindow):
@@ -117,7 +144,8 @@ class Window2048(QMainWindow):
         self.central_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # intialize background widget and 2048 overlay
-        self._view2048 = Overlay2048(num_divs, self.central_widget)
+        board = np.array([[4, 4, 4, 2], [0, 2, 4, 2], [0, 2, 4, 2], [0, 2, 4, 2]])
+        self._view2048 = Overlay2048(num_divs, board, self.central_widget)
         self._view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._view2048.setStyleSheet("background-color: transparent")
 
