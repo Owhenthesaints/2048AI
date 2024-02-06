@@ -46,17 +46,21 @@ class BoxNumber2048(QGraphicsItem):
             raise ValueError("Number not a power of two")
         # memorize position
         self.__position = [x, y]
+        self.__size = size
         self._square_background = QGraphicsRectItem(x, y, size[0], size[1], self)
         self._square_background.setBrush(color)
         self._text_item = QGraphicsTextItem(str(number), self._square_background)
         self._text_item.setDefaultTextColor(QColor(0, 0, 0))
+        self._text_item.setPos(self.__position[0]+self.__size[0]/2, self.__position[1]+self.__size[1]/2)
 
     def boundingRect(self):
         return self._square_background.boundingRect()
 
     def resize_event(self, position: list, size: tuple):
         self.__position = position
+        self.__size = size
         self._square_background.setRect(self.__position[0], self.__position[1], size[0], size[1])
+        self._text_item.setPos(self.__position[0]+self.__size[0]/2, self.__position[1]+self.__size[1]/2)
 
     def paint(self, painter: QPainter, option, widget=None):
         self._square_background.paint(painter, option, widget)
