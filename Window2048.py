@@ -7,6 +7,7 @@ from typing import Union
 
 DEFAULT_WINDOW_SIZE = (300, 300, 300, 300)
 DEFAULT_DIV = (4, 4)
+OPTIMIZE = False
 COLOR_DICT = {
     2: QColor(238, 228, 218, 255),
     4: QColor(236, 224, 202, 255),
@@ -56,7 +57,7 @@ class BoxNumber2048(QGraphicsItem):
     def boundingRect(self):
         return self._square_background.boundingRect()
 
-    def resize_event(self, position: list, size: tuple):
+    def set_geometry(self, position: list, size: tuple):
         self.__position = position
         self.__size = size
         self._square_background.setRect(self.__position[0], self.__position[1], size[0], size[1])
@@ -65,6 +66,12 @@ class BoxNumber2048(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget=None):
         self._square_background.paint(painter, option, widget)
         self._text_item.paint(painter, option, widget)
+
+    def x(self):
+        return self.__position[0]
+
+    def y(self):
+        return self.__position[1]
 
 
 class Overlay2048(QGraphicsView):
@@ -76,6 +83,7 @@ class Overlay2048(QGraphicsView):
         self._DIVS = num_div
         self.__viz_board = board
         self.__background_squares: list[BoxNumber2048] = []
+        self.__initializing = True
         self.draw_board()
 
     def set_board(self, board: np.ndarray):
@@ -91,8 +99,7 @@ class Overlay2048(QGraphicsView):
         if np.all(self.__viz_board == 0):
             return
         # set the measure of the step
-        h_step = self.width() // self._DIVS[0]
-        v_step = self.height() // self._DIVS[1]
+        h_step, v_step = self.__get_h_step_v_step()
         # get the nonzero indices
         indices = np.column_stack(np.nonzero(self.__viz_board))
         # clear the scene
@@ -106,6 +113,23 @@ class Overlay2048(QGraphicsView):
         # add all the background squares to the scene
         for background_box in self.__background_squares:
             self.scene.addItem(background_box)
+
+    def __get_h_step_v_step(self):
+        return self.width()//self._DIVS[0], self.height()//self._DIVS[1]
+
+    def resize_board(self):
+        if self.__initializing:
+            self.__initializing= False
+            self.draw_board()
+        elif OPTIMIZE:
+            # optimization comes at the cost of potential pitfalls on resize
+            h_step, v_step = self.__get_h_step_v_step()
+            for box in self.__background_squares:
+                box.set_geometry([round(box.x()/h_step)*h_step, round(box.y()/v_step)*v_step], (h_step, v_step))
+        else:
+            self.draw_board()
+            return
+
 
     def drawBackground(self, painter, rect):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -123,7 +147,7 @@ class Overlay2048(QGraphicsView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.setSceneRect(0, 0, self.viewport().width(), self.viewport().height())
-        self.draw_board()
+        self.resize_board()
 
 
 class Window2048(QMainWindow):
