@@ -1,17 +1,11 @@
-import numpy as np
-from Windowed2048 import Windowed2048
-from PyQt6.QtWidgets import QApplication
 import sys
+from PyQt6.QtWidgets import QApplication
+from Windowed2048 import Windowed2048
 
 app = QApplication(sys.argv)
 
-game = Windowed2048()
+window = Windowed2048()
 
-game.show()
-
-game.set_board(np.array([[0, 0, 0, 0],
-                         [0, 0, 0, 0],
-                         [0, 0, 0, 0],
-                         [4, 4, 8, 2]]))
+window.show()
 
 sys.exit(app.exec())
