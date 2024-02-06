@@ -52,7 +52,7 @@ class BoxNumber2048(QGraphicsItem):
         self._square_background.setBrush(color)
         self._text_item = QGraphicsTextItem(str(number), self._square_background)
         self._text_item.setDefaultTextColor(QColor(0, 0, 0))
-        self._text_item.setPos(self.__position[0]+self.__size[0]/2, self.__position[1]+self.__size[1]/2)
+        self._text_item.setPos(self.__position[0] + self.__size[0] / 2, self.__position[1] + self.__size[1] / 2)
 
     def boundingRect(self):
         return self._square_background.boundingRect()
@@ -61,7 +61,7 @@ class BoxNumber2048(QGraphicsItem):
         self.__position = position
         self.__size = size
         self._square_background.setRect(self.__position[0], self.__position[1], size[0], size[1])
-        self._text_item.setPos(self.__position[0]+self.__size[0]/2, self.__position[1]+self.__size[1]/2)
+        self._text_item.setPos(self.__position[0] + self.__size[0] / 2, self.__position[1] + self.__size[1] / 2)
 
     def paint(self, painter: QPainter, option, widget=None):
         self._square_background.paint(painter, option, widget)
@@ -75,13 +75,13 @@ class BoxNumber2048(QGraphicsItem):
 
 
 class Overlay2048(QGraphicsView):
-    def __init__(self, num_div: tuple = DEFAULT_DIV, board: np.ndarray = np.zeros((4, 4)), parent=None):
+    def __init__(self, board: np.ndarray = np.zeros(DEFAULT_DIV), parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: transparent;")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self._DIVS = num_div
-        self.__viz_board = board
+        self._DIVS = board.shape
+        self.__viz_board: np.ndarray = board
         self.__background_squares: list[BoxNumber2048] = []
         self.__initializing = True
         self.draw_board()
@@ -109,27 +109,26 @@ class Overlay2048(QGraphicsView):
         for index in indices:
             self.__background_squares.append(
                 BoxNumber2048(self.__viz_board[index[0]][index[1]], index[1] * h_step, index[0] * v_step, (h_step,
-                              v_step)))
+                                                                                                           v_step)))
         # add all the background squares to the scene
         for background_box in self.__background_squares:
             self.scene.addItem(background_box)
 
     def __get_h_step_v_step(self):
-        return self.width()//self._DIVS[0], self.height()//self._DIVS[1]
+        return self.width() // self._DIVS[0], self.height() // self._DIVS[1]
 
     def resize_board(self):
         if self.__initializing:
-            self.__initializing= False
+            self.__initializing = False
             self.draw_board()
         elif OPTIMIZE:
             # optimization comes at the cost of potential pitfalls on resize
             h_step, v_step = self.__get_h_step_v_step()
             for box in self.__background_squares:
-                box.set_geometry([round(box.x()/h_step)*h_step, round(box.y()/v_step)*v_step], (h_step, v_step))
+                box.set_geometry([round(box.x() / h_step) * h_step, round(box.y() / v_step) * v_step], (h_step, v_step))
         else:
             self.draw_board()
             return
-
 
     def drawBackground(self, painter, rect):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -151,7 +150,7 @@ class Overlay2048(QGraphicsView):
 
 
 class Window2048(QMainWindow):
-    def __init__(self, num_divs: tuple = DEFAULT_DIV, window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
+    def __init__(self, board: np.ndarray = np.zeros(DEFAULT_DIV), window_size: tuple = DEFAULT_WINDOW_SIZE) -> None:
         """
         A class to instantiate a Window which can host a 2048 game.
         :param window_size: x, y and initial width and height of the window
@@ -160,6 +159,7 @@ class Window2048(QMainWindow):
         :type num_divs: tuple
         :rtype: None
         """
+        self.__NUM_DIVS = board.shape
         super().__init__()
         # setting up window generally
         self.setWindowTitle("2048 Game")
@@ -172,11 +172,16 @@ class Window2048(QMainWindow):
         self.central_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # intialize background widget and 2048 overlay
-        board = np.array([[4, 4, 4, 2], [0, 2, 4, 2], [0, 2, 4, 2], [0, 2, 4, 2]])
-        self._view2048 = Overlay2048(num_divs, board, self.central_widget)
+        self._view2048 = Overlay2048(board, self.central_widget)
         self._view2048.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._view2048.setStyleSheet("background-color: transparent")
 
         # intialize layout
         self.layout = QStackedLayout(self.central_widget)
         self.layout.addWidget(self._view2048)
+
+    def set_board(self, board: np.ndarray):
+        if board.shape != self.__NUM_DIVS:
+            raise ValueError("Board does not have right shape")
+        else:
+            self._view2048.set_board(board)
