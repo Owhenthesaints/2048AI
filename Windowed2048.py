@@ -17,22 +17,26 @@ class Windowed2048(Game2048, Window2048):
         Game2048.set_board(self, board)
 
     def keyPressEvent(self, a0):
-        print("keyPressEvent")
         key = a0.key()
+        if self.is_game_over():
+            print("Final score ", self._score)
+
+        if self.has_lost():
+            if key == Qt.Key.Key_Escape:
+                self.close()
+            return
 
         if key == Qt.Key.Key_Z:
             self.move_up()
-            print(self._board)
-        if key == Qt.Key.Key_S:
+        elif key == Qt.Key.Key_S:
             self.move_down()
-            print(self._board)
-        if key == Qt.Key.Key_Q:
+        elif key == Qt.Key.Key_Q:
             self.move_left()
-            print(self._board)
-        if key == Qt.Key.Key_D:
+        elif key == Qt.Key.Key_D:
             self.move_right()
-            print(self._board)
-        if key == Qt.Key.Key_Escape:
+        elif key == Qt.Key.Key_Escape:
             self.close()
+
+        print(self._score)
 
         Window2048.set_board(self, self._board)
