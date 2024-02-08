@@ -59,13 +59,23 @@ class Game2048:
     def write_to_csv(self):
         if self.__writing:
             self.__writer.append_board(self._board)
+        else:
+            warnings.warn("writer is not initialised")
 
     def write_new_game_indication(self):
         if self.__writing:
             self.__writer.indicate_new_game()
+        else:
+            warnings.warn("writer is not initialised")
 
     def has_lost(self):
         return self._lost
+
+    def get_last_board_csv(self):
+        if self.__writing:
+            print(self.__writer.get_last_board())
+        else:
+            warnings.warn("No Writer initialised", UserWarning)
 
     def add_random_square(self) -> bool:
         num_zeros: int = np.count_nonzero(self._board == 0)
@@ -122,6 +132,9 @@ class Game2048:
         # write
         if self.__writing:
             self.write_to_csv()
+
+        #update game over state
+        self.is_game_over()
 
     def __move_up(self):
         board = self.__board_update(self._board.T)

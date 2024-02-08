@@ -4,12 +4,14 @@ from Game.Game2048 import Game2048
 from GUI.Window2048 import Window2048
 from PyQt6.QtCore import Qt
 
+DEFAULT_DIVS = (4, 4)
+
 
 class Windowed2048(Game2048, Window2048):
 
-    def __init__(self):
-        Game2048.__init__(self)
-        Window2048.__init__(self)
+    def __init__(self, size_board: tuple = DEFAULT_DIVS, filename: str = None, overwrite: bool = True):
+        Game2048.__init__(self, size_board, filename, overwrite)
+        Window2048.__init__(self, np.zeros(size_board))
         self.set_board(self.get_board())
 
     def set_board(self, board: np.ndarray):
@@ -24,20 +26,35 @@ class Windowed2048(Game2048, Window2048):
         if self.has_lost():
             if key == Qt.Key.Key_Escape:
                 self.write_new_game_indication()
+                self.get_last_board_csv()
                 self.close()
             return
 
         if key == Qt.Key.Key_Z:
-            self.move_up()
+            super().move_up()
         elif key == Qt.Key.Key_S:
-            self.move_down()
+            super().move_down()
         elif key == Qt.Key.Key_Q:
-            self.move_left()
+            super().move_left()
         elif key == Qt.Key.Key_D:
-            self.move_right()
+            super().move_right()
         elif key == Qt.Key.Key_Escape:
             self.close()
 
-        print(self._score)
+        Window2048.set_board(self, self._board)
 
+    def move_up(self):
+        super().move_up()
+        Window2048.set_board(self, self._board)
+
+    def move_right(self):
+        super().move_right()
+        Window2048.set_board(self, self._board)
+
+    def move_left(self):
+        super().move_left()
+        Window2048.set_board(self, self._board)
+
+    def move_down(self):
+        super().move_down()
         Window2048.set_board(self, self._board)
