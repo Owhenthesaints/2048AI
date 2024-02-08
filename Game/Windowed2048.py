@@ -1,7 +1,7 @@
 import numpy as np
 
-from Game2048 import Game2048
-from Window2048 import Window2048
+from Game.Game2048 import Game2048
+from GUI.Window2048 import Window2048
 from PyQt6.QtCore import Qt
 
 

@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from Windowed2048 import Windowed2048
+from Game.Windowed2048 import Windowed2048
 
 app = QApplication(sys.argv)
 

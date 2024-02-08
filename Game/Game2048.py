@@ -5,6 +5,7 @@ from typing import Tuple
 import time
 import csv
 import warnings
+from FileWriter.GameSaver import GameSaver
 
 
 class Direction(Enum):
@@ -19,7 +20,7 @@ class Game2048:
     A class to handle all base class logic to move the board
     """
 
-    def __init__(self, size_board: tuple = (4, 4), write_filename: str = "./game2048.csv", writing: bool = False):
+    def __init__(self, size_board: tuple = (4, 4), write_filename: str = "./Logs/game2048.csv", writing: bool = False):
         """
         :param size_board: the size of the board for the game 4*4 etc...
         :type size_board: tuple
@@ -35,23 +36,25 @@ class Game2048:
         self.__writing = writing
 
         # setup the writer
-        if write_filename is not None:
-            self.__csv_file = open(write_filename, 'w')
-        else:
-            self.__writing = False
+        if self.__writing:
+            if write_filename is not None:
+                if not write_filename.endswith(".csv"):
+                    warnings.warn("filename must end with csv writing disabled", UserWarning)
+                    self.__writing = False
+                self.__writer = GameSaver(write_filename)
+            else:
+                warnings.warn("filename is None writing disabled")
+                self.__writing = False
 
-        self.write()
+        if self.__writing:
+            self.write_to_csv()
 
     def set_board(self, board: np.ndarray):
         self._board = board.copy()
 
-    def write(self):
-        warnings.catch_warnings()
-        warnings.filterwarnings("ignore", category=RuntimeWarning)
-        powers_of_two = np.log2(self._board)
-        warnings.filterwarnings("default", category=RuntimeWarning)
-        powers_of_two[powers_of_two == -np.inf] = 0
-        np.savetxt(self.__csv_file, powers_of_two.reshape(1, -1).astype(np.uint8), delimiter=',', fmt='%d')
+    def write_to_csv(self):
+        if self.__writing:
+            self.__writer.append_board(self._board)
 
     def has_lost(self):
         return self._lost
@@ -110,7 +113,7 @@ class Game2048:
 
         # write
         if self.__writing:
-            self.write()
+            self.write_to_csv()
 
     def __move_up(self):
         board = self.__board_update(self._board.T)
