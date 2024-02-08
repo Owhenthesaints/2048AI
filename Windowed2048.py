@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt
 class Windowed2048(Game2048, Window2048):
 
     def __init__(self):
-        Game2048.__init__(self)
+        Game2048.__init__(self, writing=True)
         Window2048.__init__(self)
         self.set_board(self.get_board())
 
