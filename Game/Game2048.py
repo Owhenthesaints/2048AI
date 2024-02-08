@@ -85,7 +85,8 @@ class Game2048:
             board_num = random.randint(0, num_zeros - 1)
             input_array = np.zeros(num_zeros)
             input_array[board_num] = 1
-            self._board[self._board == 0] = input_array * random.choice([2, 4])
+            random_choice = 2 if random.random() < 0.9 else 4
+            self._board[self._board == 0] = input_array * random_choice
             return True
 
     def get_board(self) -> np.ndarray:
