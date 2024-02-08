@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt
 class Windowed2048(Game2048, Window2048):
 
     def __init__(self):
-        Game2048.__init__(self, writing=True)
+        Game2048.__init__(self)
         Window2048.__init__(self)
         self.set_board(self.get_board())
 
@@ -23,6 +23,7 @@ class Windowed2048(Game2048, Window2048):
 
         if self.has_lost():
             if key == Qt.Key.Key_Escape:
+                self.write_new_game_indication()
                 self.close()
             return
 

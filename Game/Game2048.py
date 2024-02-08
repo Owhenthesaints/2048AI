@@ -20,11 +20,11 @@ class Game2048:
     A class to handle all base class logic to move the board
     """
 
-    def __init__(self, size_board: tuple = (4, 4), write_filename: str = "./Logs/game2048.csv", writing: bool = False):
+    def __init__(self, size_board: tuple = (4, 4), write_filename: str = "./Logs/game2048.csv", overwrite: bool = True):
         """
         :param size_board: the size of the board for the game 4*4 etc...
         :type size_board: tuple
-        :param write_filename: where to write games
+        :param write_filename: where to write game if None does not write game
         :type write_filename: str
         """
         self._score = 0
@@ -33,18 +33,22 @@ class Game2048:
         self.add_random_square()
 
         # add writing state
-        self.__writing = writing
+        self.__writing = True
+        if write_filename is None:
+            self.__writing = False
 
         # setup the writer
         if self.__writing:
-            if write_filename is not None:
-                if not write_filename.endswith(".csv"):
-                    warnings.warn("filename must end with csv writing disabled", UserWarning)
-                    self.__writing = False
-                self.__writer = GameSaver(write_filename)
-            else:
-                warnings.warn("filename is None writing disabled")
+            if not write_filename.endswith(".csv"):
+                warnings.warn("filename must end with csv writing disabled", UserWarning)
                 self.__writing = False
+            else:
+                # initialising the writer
+                self.__writer = GameSaver(write_filename)
+                if isinstance(overwrite, bool) and overwrite:
+                    self.__writer.wipe_board()
+                elif not isinstance(overwrite, bool):
+                    raise TypeError("overwrite should be of type bool")
 
         if self.__writing:
             self.write_to_csv()
@@ -55,6 +59,10 @@ class Game2048:
     def write_to_csv(self):
         if self.__writing:
             self.__writer.append_board(self._board)
+
+    def write_new_game_indication(self):
+        if self.__writing:
+            self.__writer.indicate_new_game()
 
     def has_lost(self):
         return self._lost
