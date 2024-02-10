@@ -19,6 +19,7 @@ class Windowed2048(Game2048, Window2048):
 
     def show_board_with_agent(self, agent):
         agent.play()
+        self.show()
 
 
     def keyPressEvent(self, a0):
