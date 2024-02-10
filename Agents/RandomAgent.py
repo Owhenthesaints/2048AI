@@ -13,7 +13,7 @@ class RandomAgent(Agent):
     def __init__(self, game: Union[Game2048, Windowed2048]):
         super().__init__(game)
 
-    def __choose_action(self):
+    def _choose_action(self):
         choice = random.choice([0, 1, 2, 3])
         if choice == 0:
             self._move_left()

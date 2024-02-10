@@ -9,14 +9,17 @@ DEFAULT_DIVS = (4, 4)
 
 class Windowed2048(Game2048, Window2048):
 
-    def __init__(self, size_board: tuple = DEFAULT_DIVS, filename: str = None, overwrite: bool = True):
+    def __init__(self, size_board: tuple = DEFAULT_DIVS, filename: str = None, overwrite: bool = True, agent=None):
         Game2048.__init__(self, size_board, filename, overwrite)
         Window2048.__init__(self, np.zeros(size_board))
         self.set_board(self.get_board())
 
-    def set_board(self, board: np.ndarray):
+    def _set_window_board(self, board: np.ndarray):
         Window2048.set_board(self, board)
-        Game2048.set_board(self, board)
+
+    def show_board_with_agent(self, agent):
+        agent.play()
+
 
     def keyPressEvent(self, a0):
         key = a0.key()
@@ -41,7 +44,11 @@ class Windowed2048(Game2048, Window2048):
         elif key == Qt.Key.Key_Escape:
             self.close()
 
-        Window2048.set_board(self, self._board)
+        self._set_window_board(self._board)
+
+    def set_board(self, board: np.ndarray):
+        Window2048.set_board(self, board)
+        Game2048.set_board(self, board)
 
     def move_up(self):
         super().move_up()

@@ -1,9 +1,10 @@
 from Game.Game2048 import Game2048
 from Game.Windowed2048 import Windowed2048
 from typing import Union
+from abc import ABC, abstractmethod
 
 
-class Agent():
+class Agent(ABC):
 
     def __init__(self, game: Union[Game2048, Windowed2048]):
         self._game = game
@@ -28,7 +29,8 @@ class Agent():
 
     def play(self):
         while not self._game.has_lost():
-            self.__choose_action()
+            self._choose_action()
 
-    def __choose_action(self):
+    @abstractmethod
+    def _choose_action(self):
         pass
